@@ -9,8 +9,8 @@ workflows:
     scripts:
       - name: Find Android project
         script: |
-          PROJECT_DIR=$(find "$CM_BUILD_DIR" -maxdepth 3 \( -name settings.gradle -o -name settings.gradle.kts \) -printf '%h\n' | head -n 1)
-          if [ -z "$PROJECT_DIR" ]; then
+          PROJECT_DIR=$(dirname "$(find "$CM_BUILD_DIR" -maxdepth 3 \( -name settings.gradle -o -name settings.gradle.kts \) | head -n 1)")
+          if [ -z "$PROJECT_DIR" ] || [ "$PROJECT_DIR" = "." ]; then
             echo "No Android Gradle project found"
             find "$CM_BUILD_DIR" -maxdepth 3 -type f | sort
             exit 1
