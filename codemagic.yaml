@@ -1,0 +1,27 @@
+workflows:
+  rahygram-debug-apk:
+    name: RahyGram Debug APK
+    max_build_duration: 60
+    instance_type: linux_x2
+
+    environment:
+      java: 17
+
+    scripts:
+      - name: Find Android project
+        script: |
+          PROJECT_DIR=$(find "$CM_BUILD_DIR" -maxdepth 3 \( -name settings.gradle -o -name settings.gradle.kts \) -printf '%h\n' | head -n 1)
+          if [ -z "$PROJECT_DIR" ]; then
+            echo "No Android Gradle project found"
+            find "$CM_BUILD_DIR" -maxdepth 3 -type f | sort
+            exit 1
+          fi
+          echo "PROJECT_DIR=$PROJECT_DIR" >> $CM_ENV
+          echo "Detected project: $PROJECT_DIR"
+
+      - name: Build debug APK
+        script: |
+          gradle -p "$PROJECT_DIR" assembleDebug --stacktrace
+
+    artifacts:
+      - $PROJECT_DIR/app/build/outputs/apk/debug/*.apk
