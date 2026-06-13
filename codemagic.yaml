@@ -2,25 +2,24 @@ workflows:
   rahygram-debug-apk:
     name: RahyGram Debug APK
     max_build_duration: 60
+    instance_type: mac_mini_m2
 
     environment:
       java: 17
+      groups:
+        - firebase
+      vars:
+        PACKAGE_NAME: "com.rahya.rahygram"
 
     scripts:
-      - name: Find Android project
+      - name: Prepare Firebase config if available
         script: |
-          PROJECT_DIR=$(dirname "$(find "$CM_BUILD_DIR" -maxdepth 3 \( -name settings.gradle -o -name settings.gradle.kts \) | head -n 1)")
-          if [ -z "$PROJECT_DIR" ] || [ "$PROJECT_DIR" = "." ]; then
-            echo "No Android Gradle project found"
-            find "$CM_BUILD_DIR" -maxdepth 3 -type f | sort
-            exit 1
+          if [ -n "$GOOGLE_SERVICES_JSON_BASE64" ]; then
+            echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > app/google-services.json
           fi
-          echo "PROJECT_DIR=$PROJECT_DIR" >> $CM_ENV
-          echo "Detected project: $PROJECT_DIR"
-
       - name: Build debug APK
         script: |
-          gradle -p "$PROJECT_DIR" assembleDebug --stacktrace
+          gradle assembleDebug --stacktrace
 
     artifacts:
-      - $PROJECT_DIR/app/build/outputs/apk/debug/*.apk
+      - app/build/outputs/apk/debug/*.apk
